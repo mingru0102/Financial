@@ -1,0 +1,276 @@
+Dim stock_information As String
+Dim stock_name As String
+Dim stock_split() As String
+
+Dim stock_pe As String
+Dim stk_pe_split() As String
+
+Dim IncomeBlock() As String
+Const IncomeChange1 As String = "F4,E4,D4,C4,F5,E5,D5,C5,F6,E6,D6,C6"
+Const IncomeChange2 As String = "J4,I4,H4,G4,J5,I5,H5,G5,J6,I6,H6,G6"
+Const IncomeChange3 As String = "N4,M4,L4,K4,N5,M5,L5,K5,N6,M6,L6,K6"
+Const IncomeChange4 As String = "R4,Q4,P4,O4,R5,Q5,P5,O5,R6,Q6,P6,O6"
+
+Const Excel2Page As String = "1-1. 瞭解收入變化(總收益Total Revenue)"
+Const Excel3Page As String = "2. Investor Relation瞭解基本業務"
+Const Excel4Page As String = "3. PE市盈率分析股價"
+
+
+Sub CatchData_Click()
+    
+    stock_name = Range("F2").Value
+    stock_information = VBA.CreateObject("Python.ObjectLibrary").stock_info(stock_name)
+    
+    stock_split = Split(stock_information, ";")
+    IncomeBlock = Split(IncomeChange1, ",")
+    
+    Dim i As Integer
+    For i = 1 To 26
+        If i < 15 Then
+            Range("F" + CStr(i + 2)).Value = stock_split(i)
+        Else
+            Worksheets(Excel2Page).Range(IncomeBlock(i - 15)).Value = stock_split(i)
+        End If
+    Next i
+    
+    Worksheets(Excel2Page).Range("C2").Value = stock_name
+    
+    ''''-----------------------------------------------------------------------------------------------1''''
+    stock_pe = VBA.CreateObject("Python.ObjectLibrary").stock_pe(stock_split(27))
+    stk_pe_split = Split(stock_pe, ";")
+    
+    Worksheets(Excel4Page).Range("I2:L100").ClearContents
+    Worksheets(Excel4Page).Range("B2").Value = stock_split(27)
+    For i = 1 To stk_pe_split(0)
+        Worksheets(Excel4Page).Range("I" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 3)
+        Worksheets(Excel4Page).Range("J" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 2)
+        Worksheets(Excel4Page).Range("K" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 1)
+        Worksheets(Excel4Page).Range("L" + CStr(i + 1)).Value = stk_pe_split(i * 4)
+    Next i
+    Worksheets(Excel4Page).Range("F6").Value = stock_split(4)  '''' eps ''''
+    Worksheets(Excel4Page).Range("E6").Value = stock_split(28) '''' pe ''''
+    ''''-----------------------------------------------------------------------------------------------''''
+    
+    ActiveSheet.Hyperlinks.Add Anchor:=Worksheets(Excel3Page).Range("K2"), Address:="https://www.google.com/search?q=" + stock_name + "+investor+relations", TextToDisplay:=stock_name
+
+End Sub
+
+Sub CatchData1_Click()
+    
+    stock_name = Range("G2").Value
+    stock_information = VBA.CreateObject("Python.ObjectLibrary").stock_info(stock_name)
+    
+    stock_split = Split(stock_information, ";")
+    IncomeBlock = Split(IncomeChange2, ",")
+
+    Dim i As Integer
+    For i = 1 To 26
+        If i < 15 Then
+            Range("G" + CStr(i + 2)).Value = stock_split(i)
+        Else
+            Worksheets(Excel2Page).Range(IncomeBlock(i - 15)).Value = stock_split(i)
+        End If
+    Next i
+    Worksheets(Excel2Page).Range("G2").Value = stock_name
+    
+    ''''-----------------------------------------------------------------------------------------------2''''
+    stock_pe = VBA.CreateObject("Python.ObjectLibrary").stock_pe(stock_split(27))
+    stk_pe_split = Split(stock_pe, ";")
+    
+    Worksheets(Excel4Page).Range("U2:X100").ClearContents
+    Worksheets(Excel4Page).Range("N2").Value = stock_split(27)
+    For i = 1 To stk_pe_split(0)
+        Worksheets(Excel4Page).Range("U" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 3)
+        Worksheets(Excel4Page).Range("V" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 2)
+        Worksheets(Excel4Page).Range("W" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 1)
+        Worksheets(Excel4Page).Range("X" + CStr(i + 1)).Value = stk_pe_split(i * 4)
+    Next i
+    Worksheets(Excel4Page).Range("R6").Value = stock_split(4) '''' eps ''''
+    Worksheets(Excel4Page).Range("Q6").Value = stock_split(28) '''' pe ''''
+    ''''-----------------------------------------------------------------------------------------------''''
+    
+    ActiveSheet.Hyperlinks.Add Anchor:=Worksheets(Excel3Page).Range("K3"), Address:="https://www.google.com/search?q=" + stock_name + "+investor+relations", TextToDisplay:=stock_name
+
+
+End Sub
+
+Sub CatchData2_Click()
+    
+    stock_name = Range("H2").Value
+    stock_information = VBA.CreateObject("Python.ObjectLibrary").stock_info(stock_name)
+    
+    stock_split = Split(stock_information, ";")
+    IncomeBlock = Split(IncomeChange3, ",")
+
+    Dim i As Integer
+    For i = 1 To 26
+        If i < 15 Then
+            Range("H" + CStr(i + 2)).Value = stock_split(i)
+        Else
+            Worksheets(Excel2Page).Range(IncomeBlock(i - 15)).Value = stock_split(i)
+        End If
+    Next i
+    Worksheets(Excel2Page).Range("K2").Value = stock_name
+    
+    ''''-----------------------------------------------------------------------------------------------3''''
+    stock_pe = VBA.CreateObject("Python.ObjectLibrary").stock_pe(stock_split(27))
+    stk_pe_split = Split(stock_pe, ";")
+    
+    Worksheets(Excel4Page).Range("AG2:AJ100").ClearContents
+    Worksheets(Excel4Page).Range("Z2").Value = stock_split(27)
+    For i = 1 To stk_pe_split(0)
+        Worksheets(Excel4Page).Range("AG" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 3)
+        Worksheets(Excel4Page).Range("AH" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 2)
+        Worksheets(Excel4Page).Range("AI" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 1)
+        Worksheets(Excel4Page).Range("AJ" + CStr(i + 1)).Value = stk_pe_split(i * 4)
+    Next i
+    Worksheets(Excel4Page).Range("AD6").Value = stock_split(4) '''' eps ''''
+    Worksheets(Excel4Page).Range("AC6").Value = stock_split(28) '''' pe ''''
+    ''''-----------------------------------------------------------------------------------------------''''
+    
+    ActiveSheet.Hyperlinks.Add Anchor:=Worksheets(Excel3Page).Range("K4"), Address:="https://www.google.com/search?q=" + stock_name + "+investor+relations", TextToDisplay:=stock_name
+
+End Sub
+
+Sub CatchData3_Click()
+
+    stock_name = Range("I2").Value
+    stock_information = VBA.CreateObject("Python.ObjectLibrary").stock_info(stock_name)
+    
+    stock_split = Split(stock_information, ";")
+    IncomeBlock = Split(IncomeChange4, ",")
+
+    Dim i As Integer
+    For i = 1 To 26
+        If i < 15 Then
+            Range("I" + CStr(i + 2)).Value = stock_split(i)
+        Else
+            Worksheets(Excel2Page).Range(IncomeBlock(i - 15)).Value = stock_split(i)
+        End If
+    Next i
+    Worksheets(Excel2Page).Range("O2").Value = stock_name
+    
+    ''''-----------------------------------------------------------------------------------------------4''''
+    stock_pe = VBA.CreateObject("Python.ObjectLibrary").stock_pe(stock_split(27))
+    stk_pe_split = Split(stock_pe, ";")
+    
+    Worksheets(Excel4Page).Range("AS2:AV100").ClearContents
+    Worksheets(Excel4Page).Range("AL2").Value = stock_split(27)
+    For i = 1 To stk_pe_split(0)
+        Worksheets(Excel4Page).Range("AS" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 3)
+        Worksheets(Excel4Page).Range("AT" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 2)
+        Worksheets(Excel4Page).Range("AU" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 1)
+        Worksheets(Excel4Page).Range("AV" + CStr(i + 1)).Value = stk_pe_split(i * 4)
+    Next i
+    Worksheets(Excel4Page).Range("AP6").Value = stock_split(4) '''' eps ''''
+    Worksheets(Excel4Page).Range("AO6").Value = stock_split(28) '''' pe ''''
+    ''''-----------------------------------------------------------------------------------------------''''
+    
+    ActiveSheet.Hyperlinks.Add Anchor:=Worksheets(Excel3Page).Range("K5"), Address:="https://www.google.com/search?q=" + stock_name + "+investor+relations", TextToDisplay:=stock_name
+
+End Sub
+
+Sub CatchData_all_Click()
+
+    Const stock As String = "F,G,H,I"
+    Dim stock_pos() As String
+    stock_pos = Split(stock, ",")
+    
+    For Index = 0 To 3
+        
+        stock_name = Range(stock_pos(Index) + "2").Value
+        stock_information = VBA.CreateObject("Python.ObjectLibrary").stock_info(stock_name)
+        
+        stock_split = Split(stock_information, ";")
+        If Index = 0 Then
+            IncomeBlock = Split(IncomeChange1, ",")
+            Worksheets(Excel2Page).Range("C2").Value = stock_name
+        ElseIf Index = 1 Then
+            IncomeBlock = Split(IncomeChange2, ",")
+            Worksheets(Excel2Page).Range("G2").Value = stock_name
+        ElseIf Index = 2 Then
+            IncomeBlock = Split(IncomeChange3, ",")
+            Worksheets(Excel2Page).Range("K2").Value = stock_name
+        ElseIf Index = 3 Then
+            IncomeBlock = Split(IncomeChange4, ",")
+            Worksheets(Excel2Page).Range("O2").Value = stock_name
+        End If
+        
+        Dim i As Integer
+        For i = 1 To 26
+            If i < 15 Then
+                Range(stock_pos(Index) + CStr(i + 2)).Value = stock_split(i)
+            Else
+                Worksheets(Excel2Page).Range(IncomeBlock(i - 15)).Value = stock_split(i)
+            End If
+        Next i
+        
+        ActiveSheet.Hyperlinks.Add Anchor:=Worksheets(Excel3Page).Range("K" + CStr(Index + 2)), Address:="https://www.google.com/search?q=" + stock_name + "+investor+relations", TextToDisplay:=stock_name
+        
+        ''''----------------------------------------------------------------------------------''''
+        
+        If Index = 0 Then
+        
+            stock_pe = VBA.CreateObject("Python.ObjectLibrary").stock_pe(stock_split(27))
+            stk_pe_split = Split(stock_pe, ";")
+            
+            Worksheets(Excel4Page).Range("I2:L100").ClearContents
+            Worksheets(Excel4Page).Range("B2").Value = stock_split(27)
+            For i = 1 To stk_pe_split(0)
+                Worksheets(Excel4Page).Range("I" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 3)
+                Worksheets(Excel4Page).Range("J" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 2)
+                Worksheets(Excel4Page).Range("K" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 1)
+                Worksheets(Excel4Page).Range("L" + CStr(i + 1)).Value = stk_pe_split(i * 4)
+            Next i
+            Worksheets(Excel4Page).Range("F6").Value = stock_split(4) '''' eps ''''
+            Worksheets(Excel4Page).Range("E6").Value = stock_split(28) '''' pe ''''
+        ElseIf Index = 1 Then
+        
+            stock_pe = VBA.CreateObject("Python.ObjectLibrary").stock_pe(stock_split(27))
+            stk_pe_split = Split(stock_pe, ";")
+            
+            Worksheets(Excel4Page).Range("U2:X100").ClearContents
+            Worksheets(Excel4Page).Range("N2").Value = stock_split(27)
+            For i = 1 To stk_pe_split(0)
+                Worksheets(Excel4Page).Range("U" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 3)
+                Worksheets(Excel4Page).Range("V" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 2)
+                Worksheets(Excel4Page).Range("W" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 1)
+                Worksheets(Excel4Page).Range("X" + CStr(i + 1)).Value = stk_pe_split(i * 4)
+            Next i
+            Worksheets(Excel4Page).Range("R6").Value = stock_split(4) '''' eps ''''
+            Worksheets(Excel4Page).Range("Q6").Value = stock_split(28) '''' pe ''''
+        ElseIf Index = 2 Then
+        
+            stock_pe = VBA.CreateObject("Python.ObjectLibrary").stock_pe(stock_split(27))
+            stk_pe_split = Split(stock_pe, ";")
+            
+            Worksheets(Excel4Page).Range("AG2:AJ100").ClearContents
+            Worksheets(Excel4Page).Range("Z2").Value = stock_split(27)
+            For i = 1 To stk_pe_split(0)
+                Worksheets(Excel4Page).Range("AG" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 3)
+                Worksheets(Excel4Page).Range("AH" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 2)
+                Worksheets(Excel4Page).Range("AI" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 1)
+                Worksheets(Excel4Page).Range("AJ" + CStr(i + 1)).Value = stk_pe_split(i * 4)
+            Next i
+            Worksheets(Excel4Page).Range("AD6").Value = stock_split(4) '''' eps ''''
+            Worksheets(Excel4Page).Range("AC6").Value = stock_split(28) '''' pe ''''
+        ElseIf Index = 3 Then
+        
+            stock_pe = VBA.CreateObject("Python.ObjectLibrary").stock_pe(stock_split(27))
+            stk_pe_split = Split(stock_pe, ";")
+    
+            Worksheets(Excel4Page).Range("AS2:AV100").ClearContents
+            Worksheets(Excel4Page).Range("AL2").Value = stock_split(27)
+            For i = 1 To stk_pe_split(0)
+                Worksheets(Excel4Page).Range("AS" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 3)
+                Worksheets(Excel4Page).Range("AT" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 2)
+                Worksheets(Excel4Page).Range("AU" + CStr(i + 1)).Value = stk_pe_split(i * 4 - 1)
+                Worksheets(Excel4Page).Range("AV" + CStr(i + 1)).Value = stk_pe_split(i * 4)
+            Next i
+            Worksheets(Excel4Page).Range("AP6").Value = stock_split(4) '''' eps ''''
+            Worksheets(Excel4Page).Range("AO6").Value = stock_split(28) '''' pe ''''
+        End If
+        
+    Next Index
+    
+End Sub

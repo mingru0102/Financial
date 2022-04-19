@@ -1,0 +1,98 @@
+Sub 抓取股票代號()
+    Sheets("股票代號").Activate
+    Cells.Clear
+    
+    Call 股票代號_上市
+    Call 股票代號_上櫃
+End Sub
+
+Sub 股票代號_上市()
+
+    Dim oXML As Object
+    Set oXML = CreateObject("WinHttp.WinHttpRequest.5.1")
+
+    Dim oHTML As Object
+    Set oHTML = CreateObject("HTMLFile")
+
+    With oXML
+        .Open "GET", "https://isin.twse.com.tw/isin/class_main.jsp?market=1&issuetype=1&Page=1&chklike=Y", 0
+        .Option(4) = 13056
+        .send ""
+
+        oHTML.body.innerHTML = convertraw(.responseBody, "Big5")
+        Debug.Print oHTML.body.innerHTML
+    End With
+
+    Dim oTable As Object, oRow As Object, oCell As Object
+    Dim i As Integer, j As Integer
+    
+    Set oTable = oHTML.getElementsByTagName("table")(1)
+    i = 1
+    For Each oRow In oTable.Rows
+        j = 1
+        For Each oCell In oRow.Cells
+            Cells(i, j).Value = oCell.innerText
+            j = j + 1
+        Next oCell
+    i = i + 1
+    Next oRow
+
+    Set oHTML = Nothing
+    Set oXML = Nothing
+End Sub
+Sub 股票代號_上櫃()
+
+    Dim oXML As Object
+    Set oXML = CreateObject("WinHttp.WinHttpRequest.5.1")
+
+    Dim oHTML As Object
+    Set oHTML = CreateObject("HTMLFile")
+
+    With oXML
+        .Open "GET", "https://isin.twse.com.tw/isin/class_main.jsp?market=2&issuetype=4&Page=1&chklike=Y", 0
+        .Option(4) = 13056
+        .send ""
+
+        oHTML.body.innerHTML = convertraw(.responseBody, "Big5")
+        Debug.Print oHTML.body.innerHTML
+    End With
+
+    Dim oTable As Object, oRow As Object, oCell As Object
+    Dim i As Integer, j As Integer
+
+    Set oTable = oHTML.getElementsByTagName("table")(1)
+    i = Range("A1").End(xlDown).Row + 1
+    For Each oRow In oTable.Rows
+        j = 1
+        For Each oCell In oRow.Cells
+            Cells(i, j).Value = oCell.innerText
+            j = j + 1
+        Next oCell
+    i = i + 1
+    Next oRow
+
+    Set oHTML = Nothing
+    Set oXML = Nothing
+End Sub
+
+
+Function convertraw(rawdata, char)
+
+Dim rawstr
+Set rawstr = CreateObject("adodb.stream")
+With rawstr
+  .Type = 1
+  .Mode = 3
+  .Open
+  .Write rawdata
+  .Position = 0
+  .Type = 2
+  .Charset = char
+  convertraw = .ReadText
+  .Close
+End With
+Set rawstr = Nothing
+
+End Function
+
+

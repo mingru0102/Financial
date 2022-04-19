@@ -1,0 +1,136 @@
+Sub 日K()
+
+    Sheets("日K").Activate
+    
+    ActiveSheet.UsedRange.Offset(4, 0).Clear
+    
+    Sheets("券商名單").Range("A2").Value = WorksheetFunction.RandBetween(1, 8)
+    
+    Dim oXML As Object
+    Set oXML = CreateObject("WinHttp.WinHttpRequest.5.1")
+
+    Dim oHTML As Object
+    Set oHTML = CreateObject("HTMLFile")
+
+    With oXML
+        .Open "GET", Range("D3").Value, 0
+        .Option(4) = 13056
+        .send ""
+
+        rawResponseText = convertraw(.responseBody, "Big5")
+        Debug.Print oHTML.body.innerHTML
+    End With
+    
+    Dim x As Integer, y As Integer
+    x = 1
+    y = 1
+    j = 1
+    theRows = Split(rawResponseText, " ")
+    For Each theRow In theRows
+        i = 1
+        theCells = Split(theRow, ",")
+        For Each theCell In theCells
+            i = i + 1
+        Next
+        If x < i Then
+            x = i
+        End If
+        j = j + 1
+    Next
+    y = j
+    ReDim myArr(1 To x, 1 To y)
+    
+    j = 1
+    For Each theRow In theRows
+        i = 1
+        theCells = Split(theRow, ",")
+        For Each theCell In theCells
+            myArr(i, j) = theCell
+            i = i + 1
+        Next
+        j = j + 1
+    Next
+    
+    Range("A6").Resize(UBound(myArr, 1), UBound(myArr, 2)).Value = myArr
+    Erase myArr
+    Set oHTML = Nothing
+    Set oXML = Nothing
+
+End Sub
+Sub 周K()
+
+    Sheets("周K").Activate
+    
+    ActiveSheet.UsedRange.Offset(4, 0).Clear
+    
+    Sheets("券商名單").Range("A2").Value = WorksheetFunction.RandBetween(1, 8)
+    
+    Dim oXML As Object
+    Set oXML = CreateObject("WinHttp.WinHttpRequest.5.1")
+
+    Dim oHTML As Object
+    Set oHTML = CreateObject("HTMLFile")
+
+    With oXML
+        .Open "GET", Range("D3").Value, 0
+        .Option(4) = 13056
+        .send ""
+
+        rawResponseText = convertraw(.responseBody, "Big5")
+        Debug.Print oHTML.body.innerHTML
+    End With
+    
+    Dim x As Integer, y As Integer
+    x = 1
+    y = 1
+    j = 1
+    theRows = Split(rawResponseText, " ")
+    For Each theRow In theRows
+        i = 1
+        theCells = Split(theRow, ",")
+        For Each theCell In theCells
+            i = i + 1
+        Next
+        If x < i Then
+            x = i
+        End If
+        j = j + 1
+    Next
+    y = j
+    ReDim myArr(1 To x, 1 To y)
+    
+    j = 1
+    For Each theRow In theRows
+        i = 1
+        theCells = Split(theRow, ",")
+        For Each theCell In theCells
+            myArr(i, j) = theCell
+            i = i + 1
+        Next
+        j = j + 1
+    Next
+    
+    Range("A6").Resize(UBound(myArr, 1), UBound(myArr, 2)).Value = myArr
+    Erase myArr
+    Set oHTML = Nothing
+    Set oXML = Nothing
+
+End Sub
+Function convertraw(rawdata, char)
+
+Dim rawstr
+Set rawstr = CreateObject("adodb.stream")
+With rawstr
+  .Type = 1
+  .Mode = 3
+  .Open
+  .Write rawdata
+  .Position = 0
+  .Type = 2
+  .Charset = char
+  convertraw = .ReadText
+  .Close
+End With
+Set rawstr = Nothing
+
+End Function

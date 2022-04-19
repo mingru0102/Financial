@@ -1,0 +1,196 @@
+Public Declare PtrSafe Sub Sleep Lib "kernel32" (ByVal dwMilliseconds As LongPtr)
+
+' Function Get_Futu_Price return
+' 0:盤中價格, 1:盤前後價格(在盤中時好像會沒有)
+
+' Function Get_OIC_Data return array data
+'-----------------------------------------------------------------'
+'-- HISTORICAL VOLATILITY ----------------------------------------'
+'-----------------------------------------------------------------'
+' 10 day : (0,1)-current, (0,2)-1wk, (0,3)-52wk_hi, (0,4)-52wk_Low
+' 20 day : (1,1)-current, (1,2)-1wk, (1,3)-52wk_hi, (1,4)-52wk_Low
+' 30 day : (2,1)-current, (2,2)-1wk, (2,3)-52wk_hi, (2,4)-52wk_Low
+'-----------------------------------------------------------------'
+'-- IMPLIED VOLATILITY -------------------------------------------'
+'-----------------------------------------------------------------'
+' call   : (3,1)-current, (3,2)-1wk, (3,3)-52wk_hi, (3,4)-52wk_Low
+' put    : (4,1)-current, (4,2)-1wk, (4,3)-52wk_hi, (4,4)-52wk_Low
+' mean   : (5,1)-current, (5,2)-1wk, (5,3)-52wk_hi, (5,4)-52wk_Low
+'-----------------------------------------------------------------'
+'-- HISTORICAL 30-DAYS CORRELATION AGAINST -----------------------'
+'-----------------------------------------------------------------'
+' 30 day : (6,1)-current, (6,2)-1wk, (6,3)-52wk_hi, (6,4)-52wk_Low
+'-----------------------------------------------------------------'
+
+Sub Update_Stock_Info()
+    
+    Dim st As Single
+    st = Timer
+    
+    stock_name = Classification()
+    For i = 0 To 1000
+        If stock_name(i) = "" Then
+            Exit For
+        End If
+            
+        stock_price = Get_Futu_Price(stock_name(i))
+        IV_Table = Get_OIC_Data(stock_name(i))
+        
+        If stock_price(1) = "" Or stock_price(1) = 0 Then
+            s_price = stock_price(0) '盤中
+        Else
+            s_price = stock_price(1) 'OTC
+        End If
+        
+        Worksheets("code").Range("A" + CStr(i + 3)).Value = stock_name(i) 'stock name
+        Worksheets("code").Range("B" + CStr(i + 3)).Value = s_price              'price
+        Worksheets("code").Range("C" + CStr(i + 3)).Value = IV_Table(4, 1)  'put
+        Worksheets("code").Range("D" + CStr(i + 3)).Value = IV_Table(2, 3)  'Hv_H
+        Worksheets("code").Range("E" + CStr(i + 3)).Value = IV_Table(2, 4)   'Hv_L
+        Worksheets("code").Range("F" + CStr(i + 3)).Value = IV_Table(4, 3)   'Iv_H
+        Worksheets("code").Range("G" + CStr(i + 3)).Value = IV_Table(4, 4)  'Iv_L
+        
+    Next i
+    Worksheets("Strategy_CALL").Range("A1").Value = Now()
+    Worksheets("Strategy_CALL").Range("J1").Value = Timer - st
+    
+    MsgBox "Finish"
+End Sub
+
+Function Classification()
+    
+    Dim stock_name(1000) As String
+    
+    For i = 2 To 1000
+        Name = Worksheets("Strategy_CALL").Range("D" + CStr(i)).Value
+        If Name = "" Then
+            Exit For
+        End If
+        
+        For j = 0 To 1000
+            If stock_name(j) = Name Then
+                Exit For
+            End If
+            If stock_name(j) = "" Then
+                stock_name(j) = Name
+                Exit For
+            End If
+        Next j
+    Next i
+    Classification = stock_name
+End Function
+
+Function Get_Futu_Price(stock_name)
+
+    Dim stock_price(1) As Double
+    Dim oXML As Object
+    Dim oHTML As Object
+    
+    Set oXML = CreateObject("WinHttp.WinHttpRequest.5.1")
+    Set oHTML = CreateObject("HTMLFile")
+    
+    With oXML
+        .Open "GET", "https://www.futunn.com/stock/" + stock_name + "-US?seo_redirect=1", 0
+        .setRequestHeader "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36"
+        .send ""
+
+        oHTML.body.innerHTML = convertraw(.responseBody, "UTF-8")
+        Set theTables = oHTML.getElementsByTagName("span")
+        
+        i = 0
+        For Each p In theTables
+            If p.classname = "stock-price ellipsis" Then
+                stock_price(i) = p.innertext
+                'Debug.Print p.innertext
+                i = i + 1
+            End If
+        Next
+        Get_Futu_Price = stock_price
+    End With
+    Set oXML = Nothing
+    Set oHTML = Nothing
+End Function
+
+Function Get_OIC_Data(stock_name)
+    
+    Dim IV_Table(6, 4) As String
+    Dim oXML_1 As Object
+    Dim oHTML_1 As Object
+    Dim oXML_2 As Object
+    Dim oHTML_2 As Object
+    
+    Set oXML_1 = CreateObject("WinHttp.WinHttpRequest.5.1")
+    Set oHTML_1 = CreateObject("HTMLFile")
+    With oXML_1
+        '透過OIC網址取得新的URL
+        .Open "GET", "https://www.optionseducation.org/toolsoptionquotes/historical-and-implied-volatility", 0
+        .setRequestHeader "referer", "https://www.optionseducation.org/"
+        .setRequestHeader "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"
+        .send
+        
+        oHTML_1.body.innerHTML = convertraw(.responseBody, "UTF-8")
+        
+        Set t = oHTML_1.getElementsByTagName("iframe")
+        
+        '建立新網址
+        New_URL = Split(oHTML_1.getElementsByTagName("iframe").Item(0).src, "SPY")
+    End With
+    Set oXML_1 = Nothing
+    Set oHTML_1 = Nothing
+    
+    
+    Set oXML_2 = CreateObject("WinHttp.WinHttpRequest.5.1")
+    Set oHTML_2 = CreateObject("HTMLFile")
+    With oXML_2
+        '取得資料
+        .Open "GET", New_URL(0) + stock_name + New_URL(1), 0
+        .setRequestHeader "referer", "https://www.optionseducation.org/"
+        .setRequestHeader "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36"
+        
+        '重複丟命令，直到有回傳值
+        For check_cnt = 0 To 40
+            .send
+            oHTML_2.body.innerHTML = convertraw(.responseBody, "UTF-8")
+            Set theTables = oHTML_2.getElementsByTagName("tr")
+            
+            If theTables.Length <> 0 Then
+                Exit For
+            End If
+        Next check_cnt
+        
+        i = 0
+        For Each p In theTables
+            If p.Align = "center" Then
+                If p.classname = "s2" Then
+                    For cnt = 0 To 4
+                        IV_Table(i, cnt) = Split(p.getElementsByTagName("td").Item(cnt).innertext, "%")(0)
+                        Set t = p.getElementsByTagName("td")
+                        'Debug.Print Split(p.getElementsByTagName("td").Item(cnt).innertext, "%")(0)
+                    Next cnt
+                    i = i + 1
+                End If
+            End If
+        Next
+        Get_OIC_Data = IV_Table
+    End With
+    Set oXML_2 = Nothing
+    Set oHTML_2 = Nothing
+End Function
+
+Function convertraw(rawdata, char)
+
+    Dim rawstr
+    Set rawstr = CreateObject("adodb.stream")
+    With rawstr
+      .Type = 1
+      .Mode = 3
+      .Open
+      .Write rawdata
+      .Position = 0
+      .Type = 2
+      .Charset = char
+      convertraw = .ReadText
+      .Close
+    End With
+    Set rawstr = Nothing
+End Function

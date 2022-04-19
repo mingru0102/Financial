@@ -1,0 +1,19 @@
+Sub 調整技術線圖()
+
+    Sheets("總表").Activate
+    ActiveSheet.ChartObjects("圖表 7").Activate
+    ActiveChart.Axes(xlValue).Select
+    ActiveChart.Axes(xlValue).MaximumScale = Sheets("工作底稿").Range("BB5").Value
+    ActiveChart.Axes(xlValue).MinimumScale = Sheets("工作底稿").Range("BC5").Value
+    ActiveChart.Axes(xlValue, xlSecondary).Select
+    ActiveChart.Axes(xlValue, xlSecondary).MaximumScale = Sheets("工作底稿").Range("BB5").Value
+    ActiveChart.Axes(xlValue, xlSecondary).MinimumScale = Sheets("工作底稿").Range("BC5").Value
+    
+    ActiveSheet.ChartObjects("圖表 11").Activate
+    ActiveChart.Axes(xlValue).Select
+    ActiveChart.Axes(xlValue).MaximumScale = Sheets("工作底稿").Range("CG5").Value
+    ActiveChart.Axes(xlValue).MinimumScale = Sheets("工作底稿").Range("CH5").Value
+    ActiveChart.Axes(xlValue, xlSecondary).Select
+    ActiveChart.Axes(xlValue, xlSecondary).MaximumScale = Sheets("工作底稿").Range("CG5").Value
+    ActiveChart.Axes(xlValue, xlSecondary).MinimumScale = Sheets("工作底稿").Range("CH5").Value
+End Sub

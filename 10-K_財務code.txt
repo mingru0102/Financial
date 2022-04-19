@@ -1,0 +1,213 @@
+Sub 財務比率季表()
+
+    Sheets("財務比率季表").Activate
+    
+    ActiveSheet.UsedRange.Offset(4, 0).Clear
+    
+    Sheets("券商名單").Range("A2").Value = WorksheetFunction.RandBetween(1, 8)
+    
+    Dim oXML As Object
+    Set oXML = CreateObject("WinHttp.WinHttpRequest.5.1")
+
+    Dim oHTML As Object
+    Set oHTML = CreateObject("HTMLFile")
+
+    With oXML
+        .Open "GET", Range("D3").Value, 0
+        .Option(4) = 13056
+        .send ""
+
+        oHTML.body.innerHTML = convertraw(.responseBody, "Big5")
+        Debug.Print oHTML.body.innerHTML
+    End With
+
+    Dim oTable As Object, oRow As Object, oCell As Object
+    Dim i As Integer, j As Integer
+    
+    ReDim myArr(1 To 91, 1 To 9)
+    
+    Set oTable = oHTML.getElementsByTagName("table")(2)
+    i = 1
+    For Each oRow In oTable.Rows
+        j = 1
+        For Each oCell In oRow.Cells
+            myArr(i, j) = oCell.innerText
+            j = j + 1
+        Next oCell
+    i = i + 1
+    Next oRow
+    
+    Range("A6").Resize(91, 9).Value = myArr
+    Erase myArr
+    Set oHTML = Nothing
+    Set oXML = Nothing
+
+End Sub
+Sub 現金流量季表()
+
+    Sheets("現金流量季表").Activate
+    
+    ActiveSheet.UsedRange.Offset(4, 0).Clear
+    
+    Sheets("券商名單").Range("A2").Value = WorksheetFunction.RandBetween(1, 8)
+    
+    Dim oXML As Object
+    Set oXML = CreateObject("WinHttp.WinHttpRequest.5.1")
+
+    Dim oHTML As Object
+    Set oHTML = CreateObject("HTMLFile")
+
+    With oXML
+        .Open "GET", Range("D3").Value, 0
+        .Option(4) = 13056
+        .send ""
+
+        oHTML.body.innerHTML = convertraw(.responseBody, "Big5")
+        Debug.Print oHTML.body.innerHTML
+    End With
+
+    Dim oTable As Object, oRow As Object, oCell As Object
+    Dim i As Integer, j As Integer
+    
+    Set oTable = oHTML.getElementsByTagName("table")(2)
+    
+    Dim x As Integer, y As Integer
+    x = 1
+    y = 1
+    j = 1
+    For Each oRow In oTable.Rows
+        j = 1
+        For Each oCell In oRow.Cells
+            j = j + 1
+        Next oCell
+        If y < j Then
+            y = j
+        End If
+    i = i + 1
+    Next oRow
+    x = i
+    ReDim myArr(1 To x, 1 To y)
+    
+    i = 1
+    For Each oRow In oTable.Rows
+        j = 1
+        For Each oCell In oRow.Cells
+            myArr(i, j) = oCell.innerText
+            j = j + 1
+        Next oCell
+    i = i + 1
+    Next oRow
+    
+    Range("A6").Resize(UBound(myArr, 1), UBound(myArr, 2)).Value = myArr
+    Erase myArr
+    Set oHTML = Nothing
+    Set oXML = Nothing
+
+End Sub
+Sub 月營收()
+
+    Sheets("月營收").Activate
+    
+    ActiveSheet.UsedRange.Offset(4, 0).Clear
+    
+    Sheets("券商名單").Range("A2").Value = WorksheetFunction.RandBetween(1, 8)
+    
+    Dim oXML As Object
+    Set oXML = CreateObject("WinHttp.WinHttpRequest.5.1")
+
+    Dim oHTML As Object
+    Set oHTML = CreateObject("HTMLFile")
+
+    With oXML
+        .Open "GET", Range("D3").Value, 0
+        .Option(4) = 13056
+        .send ""
+
+        oHTML.body.innerHTML = convertraw(.responseBody, "Big5")
+        Debug.Print oHTML.body.innerHTML
+    End With
+
+    Dim oTable As Object, oRow As Object, oCell As Object
+    Dim i As Integer, j As Integer
+    
+    ReDim myArr(1 To 100, 1 To 7)
+
+    Set oTable = oHTML.getElementsByTagName("table")(2)
+    i = 1
+    For Each oRow In oTable.Rows
+        j = 1
+        For Each oCell In oRow.Cells
+            myArr(i, j) = oCell.innerText
+            j = j + 1
+        Next oCell
+    i = i + 1
+    Next oRow
+    
+    Range("A6").Resize(UBound(myArr, 1), UBound(myArr, 2)).Value = myArr
+    Erase myArr
+    Set oHTML = Nothing
+    Set oXML = Nothing
+    
+End Sub
+Sub 股利政策與本益比()
+
+    Sheets("股利政策與本益比").Activate
+    
+    ActiveSheet.UsedRange.Offset(4, 0).Clear
+
+    Dim oXML As Object
+    Set oXML = CreateObject("WinHttp.WinHttpRequest.5.1")
+
+    Dim oHTML As Object
+    Set oHTML = CreateObject("HTMLFile")
+
+    With oXML
+        .Open "GET", "https://goodinfo.tw/StockInfo/StockDividendPolicy.asp?STOCK_ID=" & Range("A3").Value, 0
+        .setRequestHeader "user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.164 Safari/537.36"
+        .Option(4) = 13056
+        .send ""
+
+        oHTML.body.innerHTML = convertraw(.responseBody, "UTF-8")
+        Debug.Print oHTML.body.innerHTML
+    End With
+
+    Dim oTable As Object, oRow As Object, oCell As Object
+    Dim i As Integer, j As Integer
+    
+    ReDim myArr(1 To 100, 1 To 24)
+
+    Set oTable = oHTML.getElementsByTagName("table")(23)
+    i = 1
+    For Each oRow In oTable.Rows
+        j = 1
+        For Each oCell In oRow.Cells
+            myArr(i, j) = oCell.innerText
+             j = j + 1
+        Next oCell
+    i = i + 1
+    Next oRow
+    
+    Range("A6").Resize(UBound(myArr, 1), UBound(myArr, 2)).Value = myArr
+    Erase myArr
+    Set oHTML = Nothing
+    Set oXML = Nothing
+End Sub
+
+Function convertraw(rawdata, char)
+
+Dim rawstr
+Set rawstr = CreateObject("adodb.stream")
+With rawstr
+  .Type = 1
+  .Mode = 3
+  .Open
+  .Write rawdata
+  .Position = 0
+  .Type = 2
+  .Charset = char
+  convertraw = .ReadText
+  .Close
+End With
+Set rawstr = Nothing
+
+End Function

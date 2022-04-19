@@ -1,0 +1,430 @@
+Dim stock_name As String
+Dim stock_hviv_information As String
+Dim stock_hviv_split() As String
+
+Dim stock_cagr As String
+Dim stock_cagr_split() As String
+
+
+Sub Personal_Click()
+
+    
+    '--------------------------------------------------------------------------
+    'find
+    '--------------------------------------------------------------------------
+    Dim VisibleCell() As String
+    Dim SplitCell() As String
+    Dim limit As Integer
+    
+    Dim FilterCell() As String
+    Dim SplitFilterCell() As String
+    Dim my_rng As Range
+    
+    Dim myrng As Range
+    If TypeName(Selection) = "Range" Then
+        Set myrng = Selection
+        'MsgBox myrng.Address
+    End If
+      
+    VisibleCell = Split(myrng.Address, ",")
+    Set myrng = Nothing
+    
+    '-------------------------------------------------------------------------
+    ' 解文字
+    '-------------------------------------------------------------------------
+    Dim CellList(1000) As String
+    Dim i, j, k As Integer
+    
+    k = 0
+    For i = 0 To (UBound(VisibleCell) - LBound(VisibleCell))
+
+        SplitCell = Split(VisibleCell(i), ":")
+        
+        If (UBound(SplitCell) - LBound(SplitCell)) = 0 Then
+        
+            CellList(k) = Split(SplitCell(0), "$C$")(1)
+            k = k + 1
+        Else
+            For j = Split(SplitCell(0), "$C$")(1) To Split(SplitCell(1), "$C$")(1)
+            
+                CellList(k) = j
+                k = k + 1
+            Next j
+        End If
+    Next i
+    
+    
+    '-------------------------------------------------------------------------
+    ' 篩選文字&解文字
+    '-------------------------------------------------------------------------
+    Dim NewCellList(1000) As String
+    
+    Worksheets("Personal").Range("C:C").SpecialCells(xlCellTypeVisible, 3).Select
+    If TypeName(Selection) = "Range" Then
+        Set my_rng = Selection
+        'MsgBox my_rng.Address
+    End If
+    FilterCell = Split(my_rng.Address, ",")
+    Set my_rng = Nothing
+    
+    If (Split(FilterCell(0), ":")(0) = "$C" And Split(FilterCell(0), ":")(1) = "$C") Then
+        'MsgBox "無自動篩選"
+        
+        For i = 0 To (UBound(CellList) - LBound(CellList))
+            If (CellList(i) = "") Then
+                Exit For
+            End If
+            NewCellList(i) = CellList(i)
+        Next i
+    Else
+        'MsgBox "有自動篩選"
+        
+        ' 篩選文字解
+        Dim init As Integer
+        k = 0
+        init = 0
+        For i = 0 To (UBound(FilterCell) - LBound(FilterCell))
+    
+            SplitFilterCell = Split(FilterCell(i), ":")
+            
+            For j = init To (UBound(CellList) - LBound(CellList))
+            
+                If (CellList(j) = "") Then
+                    Exit For
+                End If
+                
+                If (UBound(SplitFilterCell) - LBound(SplitFilterCell)) = 0 Then
+                    If (CLng(Split(SplitFilterCell(0), "$C$")(1)) = CLng(CellList(j))) Then
+                        NewCellList(k) = CellList(j)
+                        init = j + 1
+                        k = k + 1
+                        Exit For
+                    End If
+                Else
+                    If (CLng(Split(SplitFilterCell(0), "$C$")(1)) <= CLng(CellList(j)) And CLng(Split(SplitFilterCell(1), "$C$")(1)) >= CLng(CellList(j))) Then
+                        NewCellList(k) = CellList(j)
+                        init = j + 1
+                        k = k + 1
+                    End If
+                End If
+            Next j
+            If (CellList(init) = "") Then
+                Exit For
+            End If
+        Next i
+    End If
+
+    '''--------------------------------------------------------------------------------'''
+    Dim t As Integer
+    Dim code_cnt As Integer
+    For t = 0 To (UBound(NewCellList) - LBound(NewCellList))
+            
+        If NewCellList(t) = "" Then
+            Exit For
+        End If
+        
+        '''------------------------------------------------------------------------------'''
+        Worksheets("Personal").Range("B2").Value = NewCellList(t)
+        stock_name = Worksheets("Personal").Range("C" + NewCellList(t)).Value
+        
+        ' data base 找資料位置--------------
+        Dim compare As Integer
+        Dim c As Range
+        Dim firstAddress As String
+
+        With Worksheets("Code").Range("H:H")
+            Set c = .Find(stock_name, LookIn:=xlValues)
+            If Not c Is Nothing Then
+                compare = 0
+                Do
+                If Worksheets("Code").Range(c.Address).Value = stock_name Then
+                    'MsgBox Split(c.Address, "$H$")(1)
+                    code_cnt = CInt(Split(c.Address, "$H$")(1))
+                    Exit Do
+                Else
+                    If compare > CInt(Split(c.Address, "$H$")(1)) Then
+                        code_cnt = 0
+                        Exit Do
+                    End If
+                    compare = CInt(Split(c.Address, "$H$")(1))
+                End If
+                
+                Set c = .FindNext(c)
+                Loop While Not c Is Nothing
+                
+            End If
+        End With
+        '-----------------------------------
+        If code_cnt > 3 Then
+            stock_hviv_information = VBA.CreateObject("Python.ObjectLibrary").hviv_data(stock_name)
+            stock_hviv_split = Split(stock_hviv_information, ";")
+            
+            If (UBound(stock_hviv_split) - LBound(stock_hviv_split) > 2) Then
+            
+                Worksheets("Code").Range("M" + CStr(code_cnt)).Value = stock_hviv_split(7) 'price
+            
+                Dim hv_split() As String
+                hv_split = Split(stock_hviv_split(2), ",") 'hv
+            
+                Worksheets("Code").Range("N" + CStr(code_cnt)).Value = hv_split(3) ' hv H
+                Worksheets("Code").Range("O" + CStr(code_cnt)).Value = hv_split(4) ' hv L
+            
+                Dim hv_split_1() As String
+                hv_split_1 = Split(stock_hviv_split(4), ",") 'iv
+            
+                Worksheets("Code").Range("L" + CStr(code_cnt)).Value = hv_split_1(1) ' iv sell put
+                
+                If (Split(hv_split_1(3), "N/A")(0) <> "") Then
+                    Worksheets("Code").Range("P" + CStr(code_cnt)).Value = Split(hv_split_1(3), "%")(0) / 100 ' iv H
+                Else
+                    Worksheets("Code").Range("P" + CStr(code_cnt)).Value = "N/A"
+                End If
+                
+                If (Split(hv_split_1(4), "N/A")(0) <> "") Then
+                    Worksheets("Code").Range("Q" + CStr(code_cnt)).Value = Split(hv_split_1(4), "%")(0) / 100 ' iv L
+                Else
+                    Worksheets("Code").Range("Q" + CStr(code_cnt)).Value = "N/A"
+                End If
+            End If
+            
+            ' get cagr
+            stock_cagr = VBA.CreateObject("Python.ObjectLibrary").get_cagr(stock_name)
+            stock_cagr_split = Split(stock_cagr, ";")
+            
+            Worksheets("Code").Range("R" + CStr(code_cnt)).Value = Split(stock_cagr_split(0), ",")(0)
+            Worksheets("Code").Range("S" + CStr(code_cnt)).Value = Split(stock_cagr_split(0), ",")(1)
+            Worksheets("Code").Range("T" + CStr(code_cnt)).Value = Split(stock_cagr_split(0), ",")(2)
+            
+            Worksheets("Code").Range("U" + CStr(code_cnt)).Value = Split(stock_cagr_split(1), ",")(0)
+            Worksheets("Code").Range("V" + CStr(code_cnt)).Value = Split(stock_cagr_split(1), ",")(1)
+            Worksheets("Code").Range("W" + CStr(code_cnt)).Value = Split(stock_cagr_split(1), ",")(2)
+        End If
+    Next t
+    MsgBox "Finish"
+End Sub
+
+Sub SP_Click()
+
+    '--------------------------------------------------------------------------
+    'find
+    '--------------------------------------------------------------------------
+    Dim VisibleCell() As String
+    Dim SplitCell() As String
+    Dim limit As Integer
+    
+    Dim FilterCell() As String
+    Dim SplitFilterCell() As String
+    Dim my_rng As Range
+    
+    Dim myrng As Range
+    If TypeName(Selection) = "Range" Then
+        Set myrng = Selection
+        'MsgBox myrng.Address
+    End If
+      
+    VisibleCell = Split(myrng.Address, ",")
+    Set myrng = Nothing
+    
+    '-------------------------------------------------------------------------
+    ' 解文字
+    '-------------------------------------------------------------------------
+    Dim CellList(1000) As String
+    Dim i, j, k As Integer
+    
+    k = 0
+    For i = 0 To (UBound(VisibleCell) - LBound(VisibleCell))
+
+        SplitCell = Split(VisibleCell(i), ":")
+        
+        If (UBound(SplitCell) - LBound(SplitCell)) = 0 Then
+        
+            CellList(k) = Split(SplitCell(0), "$C$")(1)
+            k = k + 1
+        Else
+            For j = Split(SplitCell(0), "$C$")(1) To Split(SplitCell(1), "$C$")(1)
+            
+                CellList(k) = j
+                k = k + 1
+            Next j
+        End If
+    Next i
+    
+    '-------------------------------------------------------------------------
+    ' 篩選文字&解文字
+    '-------------------------------------------------------------------------
+    Dim NewCellList(1000) As String
+    
+    ' 篩選器開啟文字
+    Worksheets("S&P500").Range("C:C").SpecialCells(xlCellTypeVisible, 3).Select
+    If TypeName(Selection) = "Range" Then
+        Set my_rng = Selection
+        'MsgBox my_rng.Address
+    End If
+    FilterCell = Split(my_rng.Address, ",")
+    Set my_rng = Nothing
+    
+    If (Split(FilterCell(0), ":")(0) = "$C" And Split(FilterCell(0), ":")(1) = "$C") Then
+        'MsgBox "無自動篩選"
+        
+        For i = 0 To (UBound(CellList) - LBound(CellList))
+            If (CellList(i) = "") Then
+                Exit For
+            End If
+            NewCellList(i) = CellList(i)
+        Next i
+    Else
+        'MsgBox "有自動篩選"
+        
+        ' 篩選文字解
+        Dim init As Integer
+        k = 0
+        init = 0
+        For i = 1 To (UBound(FilterCell) - LBound(FilterCell))
+    
+            SplitFilterCell = Split(FilterCell(i), ":")
+            
+            For j = init To (UBound(CellList) - LBound(CellList))
+            
+                If (CellList(j) = "") Then
+                    Exit For
+                End If
+                
+                If (UBound(SplitFilterCell) - LBound(SplitFilterCell)) = 0 Then
+                    If (CInt(Split(SplitFilterCell(0), "$C$")(1)) = CInt(CellList(j))) Then
+                        NewCellList(k) = CellList(j)
+                        init = j + 1
+                        k = k + 1
+                        Exit For
+                    End If
+                Else
+                    If (CInt(Split(SplitFilterCell(1), "$C$")(1)) < CInt(CellList(j))) Then
+                        init = j
+                        Exit For
+                    End If
+                    
+                    If (CInt(Split(SplitFilterCell(0), "$C$")(1)) <= CInt(CellList(j)) And CInt(Split(SplitFilterCell(1), "$C$")(1)) >= CInt(CellList(j))) Then
+                        NewCellList(k) = CellList(j)
+                        init = j + 1
+                        k = k + 1
+                    End If
+                End If
+            Next j
+            If (CellList(init) = "") Then
+                Exit For
+            End If
+        Next i
+    End If
+
+    '''--------------------------------------------------------------------------------'''
+    Dim t As Integer
+    Dim code_cnt As Integer
+    For t = 0 To (UBound(NewCellList) - LBound(NewCellList))
+            
+        If NewCellList(t) = "" Then
+            Exit For
+        End If
+        
+        '''------------------------------------------------------------------------------'''
+        Worksheets("S&P500").Range("B2").Value = NewCellList(t)
+        stock_name = Worksheets("S&P500").Range("C" + NewCellList(t)).Value
+        
+        ' data base 找資料位置--------------
+        Dim compare As Integer
+        Dim c As Range
+        Dim firstAddress As String
+
+        With Worksheets("Code").Range("H:H")
+            Set c = .Find(stock_name, LookAt:=xlWhole)
+            If Not c Is Nothing Then
+                compare = 0
+                Do
+                If Worksheets("Code").Range(c.Address).Value = stock_name Then
+                    'MsgBox Split(c.Address, "$H$")(1)
+                    code_cnt = CInt(Split(c.Address, "$H$")(1))
+                    Exit Do
+                Else
+                    If compare > CInt(Split(c.Address, "$H$")(1)) Then
+                        code_cnt = 0
+                        Exit Do
+                    End If
+                    compare = CInt(Split(c.Address, "$H$")(1))
+                End If
+                
+                Set c = .FindNext(c)
+                Loop While Not c Is Nothing
+            End If
+        End With
+        '-----------------------------------
+    
+        If code_cnt > 3 Then
+            stock_hviv_information = VBA.CreateObject("Python.ObjectLibrary").hviv_data(stock_name)
+            stock_hviv_split = Split(stock_hviv_information, ";")
+            If (UBound(stock_hviv_split) - LBound(stock_hviv_split) > 2) Then
+                Worksheets("Code").Range("M" + CStr(code_cnt)).Value = stock_hviv_split(7) 'price
+            
+                Dim hv_split() As String
+                hv_split = Split(stock_hviv_split(2), ",") 'hv
+            
+                Worksheets("Code").Range("N" + CStr(code_cnt)).Value = hv_split(3) ' hv H
+                Worksheets("Code").Range("O" + CStr(code_cnt)).Value = hv_split(4) ' hv L
+            
+                Dim hv_split_1() As String
+                hv_split_1 = Split(stock_hviv_split(4), ",") 'iv
+            
+                Worksheets("Code").Range("L" + CStr(code_cnt)).Value = hv_split_1(1) ' iv sell put
+                
+                If (Split(hv_split_1(3), "N/A")(0) <> "") Then
+                    Worksheets("Code").Range("P" + CStr(code_cnt)).Value = Split(hv_split_1(3), "%")(0) / 100 ' iv H
+                Else
+                    Worksheets("Code").Range("P" + CStr(code_cnt)).Value = "N/A"
+                End If
+                
+                If (Split(hv_split_1(4), "N/A")(0) <> "") Then
+                    Worksheets("Code").Range("Q" + CStr(code_cnt)).Value = Split(hv_split_1(4), "%")(0) / 100 ' iv L
+                Else
+                    Worksheets("Code").Range("Q" + CStr(code_cnt)).Value = "N/A"
+                End If
+                
+                ' get cagr
+                stock_cagr = VBA.CreateObject("Python.ObjectLibrary").get_cagr(stock_name)
+                stock_cagr_split = Split(stock_cagr, ";")
+                
+                Worksheets("Code").Range("R" + CStr(code_cnt)).Value = Split(stock_cagr_split(0), ",")(0)
+                Worksheets("Code").Range("S" + CStr(code_cnt)).Value = Split(stock_cagr_split(0), ",")(1)
+                Worksheets("Code").Range("T" + CStr(code_cnt)).Value = Split(stock_cagr_split(0), ",")(2)
+                
+                Worksheets("Code").Range("U" + CStr(code_cnt)).Value = Split(stock_cagr_split(1), ",")(0)
+                Worksheets("Code").Range("V" + CStr(code_cnt)).Value = Split(stock_cagr_split(1), ",")(1)
+                Worksheets("Code").Range("W" + CStr(code_cnt)).Value = Split(stock_cagr_split(1), ",")(2)
+            End If
+        End If
+    Next t
+    MsgBox "Finish"
+End Sub
+
+Sub sector_update()
+
+    Dim line As Integer
+    Dim pos_list() As String
+    Const pos As String = "X,Y,Z,AA,AB,AC,AD,AE,AF,AG,AH"
+    pos_list = Split(pos, ",")
+    
+    Dim s_information As String
+    Dim s_split() As String
+
+    s_information = VBA.CreateObject("Python.ObjectLibrary").sector_data()
+    s_split = Split(s_information, ";")
+    
+    For i = 0 To (UBound(s_split) - LBound(s_split))
+        line = 4
+        For j = 1 To (UBound(Split(s_split(i), ",")) - LBound(Split(s_split(i), ",")))
+        
+            Worksheets("Code").Range(CStr(pos_list(i)) + CStr(line)).Value = Split(s_split(i), ",")(j)
+            line = line + 1
+            
+        Next j
+    Next i
+    
+    MsgBox "Finish"
+End Sub
+

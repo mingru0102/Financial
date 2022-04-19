@@ -1,0 +1,63 @@
+Sub 神秘金字塔()
+
+    Sheets("神秘金字塔").Activate
+    
+    ActiveSheet.UsedRange.Offset(4, 0).Clear
+
+    Dim oXML As Object
+    Set oXML = CreateObject("WinHttp.WinHttpRequest.5.1")
+
+    Dim oHTML As Object
+    Set oHTML = CreateObject("HTMLFile")
+
+    With oXML
+        .Open "GET", "https://norway.twsthr.info/StockHolders.aspx?stock=" & Range("A3").Value, 0
+        .Option(4) = 13056
+        .send ""
+
+        oHTML.body.innerHTML = convertraw(.responseBody, "UTF-8")
+        Debug.Print oHTML.body.innerHTML
+    End With
+
+    Dim oTable As Object, oRow As Object, oCell As Object
+    Dim i As Integer, j As Integer
+    
+    ReDim myArr(1 To 350, 1 To 30)
+
+    Set oTable = oHTML.getElementsByTagName("table")(10)
+    i = 1
+    For Each oRow In oTable.Rows
+        j = 1
+        For Each oCell In oRow.Cells
+            myArr(i, j) = oCell.innerText
+            j = j + 1
+        Next oCell
+    i = i + 1
+    Next oRow
+    
+    Range("A6").Resize(UBound(myArr, 1), UBound(myArr, 2)).Value = myArr
+
+    Set oHTML = Nothing
+    Set oXML = Nothing
+End Sub
+
+Function convertraw(rawdata, char)
+
+Dim rawstr
+Set rawstr = CreateObject("adodb.stream")
+With rawstr
+  .Type = 1
+  .Mode = 3
+  .Open
+  .Write rawdata
+  .Position = 0
+  .Type = 2
+  .Charset = char
+  convertraw = .ReadText
+  .Close
+End With
+Set rawstr = Nothing
+
+End Function
+
+
